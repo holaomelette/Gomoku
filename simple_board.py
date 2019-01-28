@@ -59,9 +59,11 @@ class SimpleGoBoard(object):
         self.maxpoint = size * size + 3 * (size + 1)
         self.board = np.full(self.maxpoint, BORDER, dtype = np.int32)
         self._initialize_empty_points(self.board) 
+        self.winner = None
 
     def copy(self):
         b = SimpleGoBoard(self.size)
+        b.winner = self.winner
         assert b.NS == self.NS
         assert b.WE == self.WE
         b.ko_recapture = self.ko_recapture
@@ -168,32 +170,116 @@ class SimpleGoBoard(object):
         assert is_black_white(color)
         # Special cases
         if point == PASS:
-            self.ko_recapture = None
+            #self.ko_recapture = None
             self.current_player = GoBoardUtil.opponent(color)
             return True
         elif self.board[point] != EMPTY:
             return False
-        if point == self.ko_recapture:
-            return False
+        #if point == self.ko_recapture:
+            #return False
             
         # General case: deal with captures, suicide, and next ko point
-        oppColor = GoBoardUtil.opponent(color)
-        in_enemy_eye = self._is_surrounded(point, oppColor)
+        #oppColor = GoBoardUtil.opponent(color)
+        #in_enemy_eye = self._is_surrounded(point, oppColor)
         self.board[point] = color
-        single_captures = []
-        neighbors = self._neighbors(point)
-        for nb in neighbors:
-            if self.board[nb] == oppColor:
-                single_capture = self._detect_and_process_capture(nb)
-                if single_capture != None:
-                    single_captures.append(single_capture)
-        block = self._block_of(point)
-        if not self._has_liberty(block): # undo suicide move
-            self.board[point] = EMPTY
-            return False
-        self.ko_recapture = None
-        if in_enemy_eye and len(single_captures) == 1:
-            self.ko_recapture = single_captures[0]
+        #single_captures = []
+        #neighbors = self._neighbors(point)
+        #for nb in neighbors:
+            #if self.board[nb] == oppColor:
+                #single_capture = self._detect_and_process_capture(nb)
+                #if single_capture != None:
+                    #single_captures.append(single_capture)
+        #block = self._block_of(point)
+        #if not self._has_liberty(block): # undo suicide move
+            #self.board[point] = EMPTY
+            #return False
+        #self.ko_recapture = None
+        #if in_enemy_eye and len(single_captures) == 1:
+            #self.ko_recapture = single_captures[0]
+        
+        #check vertical winner   
+        count = -1
+        location = point
+        for i in range(5):
+            if location > 0 and location < len(self.board):
+                if self.board[location] == color :
+                    count += 1
+                    location += 1
+                else:
+                    break
+        location = point
+        for i in range(5):
+            if location > 0 and location < len(self.board):
+                if self.board[location] == color :
+                    count += 1
+                    location -= 1
+                else:
+                    break                
+        if count >= 5:
+            self.winner = color
+            
+        #check horizental winner
+        count = -1
+        location = point
+        for i in range(5):
+            if location > 0 and location < len(self.board):
+                if self.board[location] == color :
+                    count += 1
+                    location += (self.size+1)
+                else:
+                    break
+        location = point
+        for i in range(5):
+            if location > 0 and location < len(self.board):
+                if self.board[location] == color :
+                    count += 1
+                    location -= (self.size+1)
+                else:
+                    break                
+        if count >= 5:
+            self.winner = color        
+        #check diag from top left to down right
+        count = -1
+        location = point
+        for i in range(5):
+            if location > 0 and location < len(self.board):
+                if self.board[location] == color :
+                    count += 1
+                    location += (self.size+2)
+                else:
+                    break
+        location = point
+        for i in range(5):
+            if location > 0 and location < len(self.board):
+                if self.board[location] == color :
+                    count += 1
+                    location -= (self.size+2)
+                else:
+                    break                
+        if count >= 5:
+            self.winner = color         
+        
+        #check diag from top right to down left
+        count = -1
+        location = point
+        for i in range(5):
+            if location > 0 and location < len(self.board):
+                if self.board[location] == color :
+                    count += 1
+                    location += self.size
+                else:
+                    break
+        location = point
+        for i in range(5):
+            if location > 0 and location < len(self.board):
+                if self.board[location] == color :
+                    count += 1
+                    location -= self.size
+                else:
+                    break                
+        if count >= 5:
+            self.winner = color            
+        
         self.current_player = GoBoardUtil.opponent(color)
         return True
 
